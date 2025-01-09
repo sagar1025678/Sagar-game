@@ -43,14 +43,18 @@
         }
         .joystick {
             display: grid;
-            grid-template-columns: repeat(3, 50px);
-            grid-template-rows: repeat(3, 50px);
-            gap: 5px;
+            grid-template-columns: 80px 80px 80px;
+            grid-template-rows: 80px 80px 80px;
+            gap: 10px;
         }
         .joystick button {
-            width: 50px;
-            height: 50px;
-            font-size: 18px;
+            width: 80px;
+            height: 80px;
+            font-size: 24px;
+            border-radius: 10px;
+            background-color: #ddd;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
         .score-board {
             margin: 10px;
@@ -65,8 +69,8 @@
     </div>
 
     <div id="deathPopup" class="popup">
-        <p>You made a mistake! What would you like to do?</p>
-        <button onclick="restartGame()">Play from Beginning</button>
+        <p>Ooopppsss you died! I am sorry my love, please try again...... Mwahhhhh</p>
+        <button onclick="restartGame()">Try Again</button>
     </div>
 
     <div class="score-board">
@@ -79,10 +83,10 @@
     <div class="controls">
         <div class="joystick">
             <button onclick="changeDirection('up')">&#9650;</button>
-            <div></div>
+            <button></button>
             <button onclick="changeDirection('down')">&#9660;</button>
             <button onclick="changeDirection('left')">&#9664;</button>
-            <div></div>
+            <button></button>
             <button onclick="changeDirection('right')">&#9654;</button>
         </div>
     </div>
@@ -157,11 +161,15 @@
 
         function drawGame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'red';
+            ctx.fillStyle = 'orange';
             ctx.fillRect(food.x, food.y, 20, 20);
             
             ctx.fillStyle = 'green';
-            snake.forEach(segment => ctx.fillRect(segment.x, segment.y, 20, 20));
+            snake.forEach(segment => {
+                ctx.beginPath();
+                ctx.arc(segment.x + 10, segment.y + 10, 10, 0, Math.PI * 2);
+                ctx.fill();
+            });
         }
 
         function restartGame() {
@@ -206,5 +214,4 @@
         startPopup.style.display = 'block';
     </script>
 </body>
-        </html>
-        
+</html>
