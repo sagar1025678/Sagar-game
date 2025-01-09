@@ -8,6 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -35,6 +36,26 @@
             padding: 10px;
             font-size: 16px;
         }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .joystick {
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 5px;
+        }
+        .joystick button {
+            width: 50px;
+            height: 50px;
+            font-size: 18px;
+        }
+        .score-board {
+            margin: 10px;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -42,27 +63,37 @@
         <p>Welcome to childhood nostalgia! It's me, Sagar Sunar, who is gonna provide you the experience. Hope you will enjoy this!</p>
         <button onclick="startGame()">Start</button>
     </div>
-    
+
     <div id="deathPopup" class="popup">
         <p>You made a mistake! What would you like to do?</p>
         <button onclick="restartGame()">Play from Beginning</button>
-        <button onclick="kissSagar()">Kiss Sagar</button>
     </div>
 
-    <div id="kissPopup" class="popup">
-        <p>Are you only and beautiful Sagar wife?</p>
-        <button onclick="resumeGame(true)">Yes</button>
-        <button onclick="resumeGame(false)">No</button>
+    <div class="score-board">
+        <p>Score: <span id="currentScore">0</span></p>
+        <p>Highest Score: <span id="highScore">0</span></p>
     </div>
 
     <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    <div class="controls">
+        <div class="joystick">
+            <button onclick="changeDirection('up')">&#9650;</button>
+            <div></div>
+            <button onclick="changeDirection('down')">&#9660;</button>
+            <button onclick="changeDirection('left')">&#9664;</button>
+            <div></div>
+            <button onclick="changeDirection('right')">&#9654;</button>
+        </div>
+    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const startPopup = document.getElementById('startPopup');
         const deathPopup = document.getElementById('deathPopup');
-        const kissPopup = document.getElementById('kissPopup');
+        const currentScoreEl = document.getElementById('currentScore');
+        const highScoreEl = document.getElementById('highScore');
 
         let snake = [{ x: 200, y: 200 }];
         let direction = { x: 20, y: 0 };
@@ -70,7 +101,10 @@
         let speed = 100;
         let gameInterval;
         let isGameOver = false;
-        let resumePosition = null;
+        let score = 0;
+        let highScore = localStorage.getItem('highScore') || 0;
+
+        highScoreEl.textContent = highScore;
 
         function startGame() {
             startPopup.style.display = 'none';
@@ -84,6 +118,8 @@
             food = { x: Math.floor(Math.random() * 20) * 20, y: Math.floor(Math.random() * 20) * 20 };
             speed = 100;
             isGameOver = false;
+            score = 0;
+            currentScoreEl.textContent = score;
         }
 
         function updateGame() {
@@ -94,8 +130,12 @@
             if (head.x < 0 || head.y < 0 || head.x >= canvas.width || head.y >= canvas.height || snake.some(segment => segment.x === head.x && segment.y === head.y)) {
                 clearInterval(gameInterval);
                 isGameOver = true;
-                resumePosition = { snake: [...snake], direction: { ...direction }, food: { ...food }, speed };
                 deathPopup.style.display = 'block';
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('highScore', highScore);
+                    highScoreEl.textContent = highScore;
+                }
                 return;
             }
 
@@ -106,6 +146,8 @@
                 speed = Math.max(50, speed - 5);
                 clearInterval(gameInterval);
                 gameInterval = setInterval(updateGame, speed);
+                score += 10;
+                currentScoreEl.textContent = score;
             } else {
                 snake.pop();
             }
@@ -127,74 +169,42 @@
             startGame();
         }
 
-        function kissSagar() {
-            deathPopup.style.display = 'none';
-            kissPopup.style.display = 'block';
-        }
-
-        function resumeGame(isWife) {
-            kissPopup.style.display = 'none';
-            if (isWife && resumePosition) {
-                snake = [...resumePosition.snake];
-                direction = { ...resumePosition.direction };
-                food = { ...resumePosition.food };
-                speed = resumePosition.speed;
-                isGameOver = false;
-                gameInterval = setInterval(updateGame, speed);
-            } else {
-                restartGame();
+        function changeDirection(dir) {
+            switch (dir) {
+                case 'up':
+                    if (direction.y === 0) direction = { x: 0, y: -20 };
+                    break;
+                case 'down':
+                    if (direction.y === 0) direction = { x: 0, y: 20 };
+                    break;
+                case 'left':
+                    if (direction.x === 0) direction = { x: -20, y: 0 };
+                    break;
+                case 'right':
+                    if (direction.x === 0) direction = { x: 20, y: 0 };
+                    break;
             }
         }
 
         window.addEventListener('keydown', (e) => {
             switch (e.key) {
                 case 'ArrowUp':
-                    if (direction.y === 0) direction = { x: 0, y: -20 };
+                    changeDirection('up');
                     break;
                 case 'ArrowDown':
-                    if (direction.y === 0) direction = { x: 0, y: 20 };
+                    changeDirection('down');
                     break;
                 case 'ArrowLeft':
-                    if (direction.x === 0) direction = { x: -20, y: 0 };
+                    changeDirection('left');
                     break;
                 case 'ArrowRight':
-                    if (direction.x === 0) direction = { x: 20, y: 0 };
+                    changeDirection('right');
                     break;
             }
         });
 
-        window.addEventListener('touchstart', handleTouch);
-        window.addEventListener('touchmove', handleTouch);
-
-        let startX = null;
-        let startY = null;
-
-        function handleTouch(e) {
-            if (e.touches.length === 1) {
-                let touch = e.touches[0];
-                if (startX === null || startY === null) {
-                    startX = touch.clientX;
-                    startY = touch.clientY;
-                    return;
-                }
-
-                let diffX = touch.clientX - startX;
-                let diffY = touch.clientY - startY;
-
-                if (Math.abs(diffX) > Math.abs(diffY)) {
-                    if (diffX > 0 && direction.x === 0) direction = { x: 20, y: 0 };
-                    else if (diffX < 0 && direction.x === 0) direction = { x: -20, y: 0 };
-                } else {
-                    if (diffY > 0 && direction.y === 0) direction = { x: 0, y: 20 };
-                    else if (diffY < 0 && direction.y === 0) direction = { x: 0, y: -20 };
-                }
-
-                startX = null;
-                startY = null;
-            }
-        }
-
         startPopup.style.display = 'block';
     </script>
 </body>
-</html>
+        </html>
+        
